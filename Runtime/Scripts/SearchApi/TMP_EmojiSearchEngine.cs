@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Text;
 
 namespace Kyub.EmojiSearch.Utilities
 {
@@ -86,6 +87,40 @@ namespace Kyub.EmojiSearch.Utilities
             }
 
             return v_changed;
+        }
+
+        public static int GetSymbolLength(TMP_SpriteAsset p_spriteAsset, string p_text, int p_startPosition)
+        {
+            var v_mainSpriteAsset = p_spriteAsset == null ? TMPro.TMP_Settings.defaultSpriteAsset : p_spriteAsset;
+            var v_fastLookupPath = v_mainSpriteAsset != null && s_fastLookupPath.ContainsKey(v_mainSpriteAsset) ? s_fastLookupPath[v_mainSpriteAsset] : new HashSet<string>();
+            var v_lookupTableSequences = v_mainSpriteAsset != null && s_lookupTableSequences.ContainsKey(v_mainSpriteAsset) ? s_lookupTableSequences[v_mainSpriteAsset] : new Dictionary<string, string>();
+
+            if (v_lookupTableSequences == null || v_lookupTableSequences.Count == 0)
+                return 0;
+
+            int v_endCounter = p_startPosition;
+            StringBuilder v_auxSequence = new StringBuilder();
+
+            while (p_text.Length > v_endCounter &&
+                   (v_endCounter == p_startPosition ||
+                    v_fastLookupPath.Contains(v_auxSequence.ToString())))
+            {
+                v_auxSequence.Append(p_text[v_endCounter]);
+                v_endCounter++;
+            }
+
+            //Remove last added guy (the previous one is the correct)
+            if (v_auxSequence.Length > 0 && !v_fastLookupPath.Contains(v_auxSequence.ToString()))
+                v_auxSequence.Remove(v_auxSequence.Length - 1, 1);
+
+            var v_sequence = v_auxSequence.Length > 0 ? v_auxSequence.ToString() : "";
+            //Found a sequence, add it instead add the character
+            if (v_sequence.Length > 0 && v_lookupTableSequences.ContainsKey(v_sequence))
+            {
+                return v_sequence.Length;
+            }
+
+            return 0;
         }
 
         /// <summary>
